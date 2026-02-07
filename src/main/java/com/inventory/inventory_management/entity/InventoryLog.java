@@ -1,0 +1,42 @@
+package com.inventory.inventory_management.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name="inventory_logs")
+public class InventoryLog {
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false, length=50)
+    private InverntoryActions action;
+
+    @Column(name="quantity_change",nullable=false)
+    private Integer quantityChange;
+    @Column(name="quantity_before",nullable=false)
+    private Integer quantityBefore;
+    @Column(name = "quantity_after",nullable=false)
+    private Integer quantityAfter;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable=false, updatable=false)
+    private LocalDateTime createdAt;
+}
