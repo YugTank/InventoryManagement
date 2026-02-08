@@ -1,5 +1,6 @@
 package com.inventory.inventory_management.service;
 
+import com.inventory.inventory_management.dto.request.CategoryRequest;
 import com.inventory.inventory_management.entity.Category;
 import com.inventory.inventory_management.repository.CategoryRepository;
 import jakarta.transaction.Transactional;
@@ -17,13 +18,14 @@ public class CategoryService {
     private CategoryRepository categoryRepository;
 
     @Transactional
-    public Category createCategory(String name) {
-        log.info("Creating category {}", name);
-        if(categoryRepository.existsByName(name)){
-            throw new IllegalArgumentException("Category with name " + name + " already exists");
+    public Category createCategory(CategoryRequest categoryRequest) {
+        log.info("Creating category {}", categoryRequest.getName());
+        if(categoryRepository.existsByName(categoryRequest.getName())) {
+            throw new IllegalArgumentException("Category with name " + categoryRequest.getName() + " already exists");
         }
         Category category = new Category();
-        category.setName(name);
+        category.setName(categoryRequest.getName());
+        log.info("Category successfully created {}",category.getName());
         return categoryRepository.save(category);
     }
 
@@ -34,15 +36,15 @@ public class CategoryService {
     }
 
     @Transactional
-    public Category updateCategory(Long id, String newName) {
+    public Category updateCategory(Long id, CategoryRequest categoryRequest) {
         log.info("Updating category {}", id);
         Category category = findById(id);
 
-        Category exisitng=categoryRepository.findByName(newName);
+        Category exisitng=categoryRepository.findByName(categoryRequest.getName());
         if(exisitng!=null){
-            throw  new IllegalArgumentException("Category with name " + newName + " already exists");
+            throw  new IllegalArgumentException("Category with name " + categoryRequest.getName() + " already exists");
         }
-        category.setName(newName);
+        category.setName(categoryRequest.getName());
         return categoryRepository.save(category);
     }
 
