@@ -4,15 +4,11 @@ import com.inventory.inventory_management.dto.request.ProductRequest;
 import com.inventory.inventory_management.dto.request.ProductUpdateRequst;
 import com.inventory.inventory_management.entity.Category;
 import com.inventory.inventory_management.entity.Product;
-import com.inventory.inventory_management.repository.CategoryRepository;
 import com.inventory.inventory_management.repository.ProductRepository;
-import jakarta.persistence.Id;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service
