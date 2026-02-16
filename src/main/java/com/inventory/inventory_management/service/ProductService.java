@@ -9,7 +9,9 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.List;
+import tools.jackson.core.type.TypeReference;
+
+import java.util.*;
 
 @Service
 @Slf4j
@@ -19,6 +21,11 @@ public class ProductService {
     private ProductRepository productRepository;
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private RedisService redisService;
+
+    private static final String CACHE_KEY_PRODUCT="product:id:";
+    private static final long CACHE_TTL=10;
 
     @Transactional
     public Product createProduct(ProductRequest request){
@@ -41,12 +48,32 @@ public class ProductService {
         return productRepository.save(product);
     }
     public List<Product> getAllProducts(){
-        return productRepository.findAll();
+        Product[] products=redisService.get("product:all", Product[].class);
+        if(products!=null){
+            log.info("Getting all products from Cache");
+            return Arrays.asList(products);
+        }
+        List<Product> allProducts=productRepository.findAll();
+        redisService.set("product:all", allProducts.toArray(), CACHE_TTL);
+        log.info("Getting all products from DB");
+        return allProducts;
+
     }
+
     public Product getProductById(Long id){
-        log.info("Getting product by id "+id);
-        return productRepository.findById(id)
+        log.info("Getting product by {} ",id);
+
+        Product product=redisService.get(CACHE_KEY_PRODUCT+id,Product.class);
+
+        if(product!=null){
+            log.info("Found product by {} from Redis cache ",id);
+            return product;
+        }
+        log.info("Fetching product {} from DB",id);
+        Product product1=productRepository.findById(id)
                 .orElseThrow(()->new IllegalArgumentException("Product with id "+id+" not found"));
+        redisService.set(CACHE_KEY_PRODUCT+id,product1,CACHE_TTL);
+        return product1;
     }
 
     public Product getProductBySku(String sku){
@@ -91,12 +118,19 @@ public class ProductService {
             product.setCategory(category);
         }
         log.info("Updated name: {}", product.getName());
+
+        redisService.evict(CACHE_KEY_PRODUCT+product.getId());
+        redisService.evict("product:all");
+        log.info("Evicting product {} from Redis cache ",id);
+
         return productRepository.save(product);
     }
 
     @Transactional
     public void deleteProductById(Long id){
-        log.info("Deleting product "+id);
+        log.info("Deleting product {}",id);
+        redisService.evict(CACHE_KEY_PRODUCT+id);
+        redisService.evict("product:all");
         productRepository.deleteById(id);
     }
 }
