@@ -7,6 +7,7 @@ import com.inventory.inventory_management.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Category> createCategory(@Valid @RequestBody CategoryRequest categoryRequest){
         Category newCategory=categoryService.createCategory(categoryRequest);
         return ResponseEntity.ok(newCategory);
@@ -37,12 +39,14 @@ public class CategoryController {
         return CategoryResponse.fromEntity(category);
     }
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public CategoryResponse updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryRequest categoryRequest){
         Category updatedCategory=categoryService.updateCategory(id,categoryRequest);
         return CategoryResponse.fromEntity(updatedCategory);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteCategoryById(@PathVariable Long id){
         categoryService.deleteCategory(id);
     }

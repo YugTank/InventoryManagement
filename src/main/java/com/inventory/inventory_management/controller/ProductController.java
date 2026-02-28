@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ProductController {
     private ProductService productService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request){
         Product newProduct = productService.createProduct(request);
         ProductResponse productResponse = ProductResponse.fromEntity(newProduct);
@@ -63,6 +65,7 @@ public class ProductController {
     }
 
     @GetMapping("/low-stock")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<ProductResponse> getLowStockProducts(){
         return productService.getLowStockProducts()
                 .stream()
@@ -71,11 +74,13 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ProductResponse updateProduct(@PathVariable Long id,@Valid @RequestBody ProductUpdateRequst request){
         return ProductResponse.fromEntity(productService.updateProduct(id,request));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id){
         productService.deleteProductById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

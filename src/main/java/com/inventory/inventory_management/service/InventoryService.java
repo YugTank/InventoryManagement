@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -26,6 +27,8 @@ public class InventoryService {
 
     @Autowired
     private InventoryLogRepository inventoryLogRepository;
+    @Autowired
+    private RedisService redisService;
 
     @Transactional
     public StockResponse updateStock(StockUpdateRequest  request) {
@@ -87,8 +90,19 @@ public class InventoryService {
     }
 
     public List<InventoryLog> getRecentLogs(){
+        final String CACHE_LOG_KEY="logs:recent";
         log.info("Getting recent logs for product");
-        return inventoryLogRepository.findTop50ByOrderByCreatedAtDesc();
+
+        InventoryLog[] recent=redisService.get(CACHE_LOG_KEY,InventoryLog[].class);
+        if(recent!=null){
+            log.info("Found recent logs for product from Redis");
+            return Arrays.asList(recent);
+        }
+        log.info("Getting recent logs for product from DB");
+        List<InventoryLog> recentLogs=inventoryLogRepository.findTop50ByOrderByCreatedAtDesc();
+
+        redisService.set(CACHE_LOG_KEY,recentLogs.toArray(),10);
+        return recentLogs;
     }
 
     private void createLog(Product product, InverntoryActions actions, int quantityChange, int quantityBefore,

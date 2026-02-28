@@ -7,6 +7,7 @@ import com.inventory.inventory_management.service.InventoryService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,12 +20,14 @@ public class InventoryController {
     private InventoryService inventoryService;
 
     @PostMapping("/update")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<StockResponse> updateStock(@Valid @RequestBody StockUpdateRequest request){
         StockResponse stockResponse = inventoryService.updateStock(request);
         return ResponseEntity.ok(stockResponse);
     }
 
     @GetMapping("/logs/product/{productId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<InventoryLogResponse> getProductLogs(@PathVariable Long productId){
         return inventoryService.getProductLogs(productId)
                 .stream()
@@ -33,6 +36,7 @@ public class InventoryController {
     }
 
     @GetMapping("/logs/recent")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<InventoryLogResponse> getRecentLogs(){
         return inventoryService.getRecentLogs()
                 .stream()
