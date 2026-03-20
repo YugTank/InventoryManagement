@@ -37,4 +37,6 @@ public class User {
     @CreationTimestamp
     @Column(updatable = false,nullable = false,name = "created_at")
     private LocalDateTime createdAt;
+
+    private String provider;
 }

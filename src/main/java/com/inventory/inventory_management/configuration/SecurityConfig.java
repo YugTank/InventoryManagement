@@ -1,5 +1,6 @@
 package com.inventory.inventory_management.configuration;
 
+import com.inventory.inventory_management.service.CustomOAuth2UserService;
 import com.inventory.inventory_management.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,11 @@ public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
 
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
+    @Autowired
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -48,13 +54,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.
                 csrf(csrf -> csrf.disable())
-                .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/auth/**","/users/*").permitAll()
+                        .requestMatchers("/auth/**","/users/*","/oauth2/**", "/login/oauth2/**","/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
+                .oauth2Login(oauth2->
+                        oauth2.userInfoEndpoint(u->u.userService(customOAuth2UserService))
+                                .successHandler(oAuth2SuccessHandler)
+                                .failureUrl("/auth/login?error=oauth_failed")
+                        )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
