@@ -165,7 +165,7 @@ http://localhost:8080/v3/api-docs
 
 ```bash
 # Clone repository
-git clone <your-repo-url>
+git clone https://github.com/YugTank/InventoryManagement
 
 # Navigate to project
 cd inventory-management
